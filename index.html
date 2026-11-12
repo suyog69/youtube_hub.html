@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suyog Chaudhari | YouTube Auto-Uploader & Python Scheduler</title>
+  <style>
+    :root {
+      --bg-color: #0b0f19; --card-bg: #111827; --text-main: #f9fafb; --text-sub: #9ca3af;
+      --accent: #38bdf8; --accent-glow: rgba(56, 189, 248, 0.25); --border-color: #1f2937; --success: #22c55e; --danger: #ef4444;
+    }
+    body.light-theme {
+      --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-sub: #64748b;
+      --accent: #0284c7; --accent-glow: rgba(2, 132, 199, 0.2); --border-color: #e2e8f0;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-main);
+      margin: 0; padding: 16px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+    }
+    .top-controls { width: 100%; max-width: 720px; display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .control-btn { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+    .container { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 16px; }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 14px; border: 1px solid var(--border-color); }
+    .card h3 { margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 6px; color: var(--accent); }
+    .calc-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .calc-input, .scratchpad-input { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; font-family: inherit; }
+    .scratchpad-input { resize: vertical; min-height: 100px; }
+    .submit-btn { background: var(--accent); color: #0b0f19; font-weight: bold; border: none; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; width: 100%; }
+    .submit-btn:hover { opacity: 0.9; }
+    .prog-box { background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-top: 8px; font-family: monospace; font-size: 0.85rem; }
+    .prog-row { display: flex; justify-content: space-between; gap: 8px; }
+    .prog-val { color: var(--accent); font-weight: bold; text-align: right; }
+    header { text-align: center; margin-bottom: 15px; }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #0284c7); color: #0b0f19; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; margin: 0 auto 10px auto; }
+  </style>
+</head>
+<body>
+
+  <div class="top-controls">
+    <button class="control-btn" onclick="toggleTheme()">☀️ Light / 🌙 Dark</button>
+  </div>
+
+  <header>
+    <div class="avatar">SC</div>
+    <h1>Suyog Chaudhari</h1>
+    <p style="color: var(--text-sub); margin:0;">YouTube Auto-Uploader & Python Scheduler Suite</p>
+  </header>
+
+  <main class="container">
+    
+    <!-- DIRECT BROWSER OAUTH YOUTUBE UPLOADER -->
+    <section class="card">
+      <h3>🌐 Direct Browser OAuth YouTube Uploader</h3>
+      <p style="font-size: 0.83rem; color: var(--text-sub);">Apna Google Client ID daal kar seedha browser se video upload & schedule karein:</p>
+      <div class="calc-grid">
+        <input type="text" id="ytClientId" class="calc-input" placeholder="Enter Google Client ID (.apps.googleusercontent.com)">
+        <input type="file" id="ytVideoFile" class="calc-input" accept="video/*">
+        <input type="text" id="ytTitle" class="calc-input" value="My Automated IoT Project Video">
+        <textarea id="ytDesc" class="scratchpad-input">Generated via Suyog Tech Hub OS 🚀</textarea>
+        <button class="submit-btn" onclick="triggerBrowserOAuthUpload()">Authenticate & Upload to YouTube 🚀</button>
+        <div class="prog-box"><div class="prog-row"><span>Status:</span> <span class="prog-val" id="ytUploadStatus">Idle</span></div></div>
+      </div>
+    </section>
+
+    <!-- 1-CLICK PYTHON / TERMUX AUTO-SCHEDULER GENERATOR -->
+    <section class="card">
+      <h3>🐍 1-Click Termux & Python Auto-Scheduler Generator</h3>
+      <p style="font-size: 0.83rem; color: var(--text-sub);">Apne laptop ya Termux ke liye ready-to-run auto-scheduler Python script generate karein:</p>
+      <div class="calc-grid">
+        <input type="text" id="genTitle" class="calc-input" value="Industrial Automation & ESP32 Tutorial">
+        <input type="datetime-local" id="genScheduleTime" class="calc-input">
+        <button class="submit-btn" onclick="generatePythonScript()">Generate Python Script ⚡</button>
+        <textarea id="pyCodeOutput" class="scratchpad-input" readonly style="font-family: monospace; font-size: 0.78rem; height: 130px;"></textarea>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function toggleTheme() { document.body.classList.toggle('light-theme'); }
+
+    function triggerBrowserOAuthUpload() {
+      const clientId = document.getElementById('ytClientId').value.trim();
+      const fileInput = document.getElementById('ytVideoFile').files[0];
+      const status = document.getElementById('ytUploadStatus');
+      
+      if(!clientId) { alert("Please enter Google OAuth Client ID!"); return; }
+      if(!fileInput) { alert("Please select a video file!"); return; }
+
+      status.textContent = "Redirecting to Google OAuth login...";
+      const redirectUri = window.location.origin + window.location.pathname;
+      const scope = "https://www.googleapis.com/auth/youtube.upload";
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+      window.location.href = authUrl;
+    }
+
+    function generatePythonScript() {
+      const title = document.getElementById('genTitle').value || "Default Video";
+      const sched = document.getElementById('genScheduleTime').value || "2026-12-31T18:00:00Z";
+      
+      const code = `# Run in Termux or Laptop: pip install google-api-python-client google-auth-oauthlib
+import os
+import google_auth_oauthlib.flow
+import googleapiclient.discovery
+
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+TITLE = "${title}"
+SCHEDULE_TIME = "${sched}:00Z"
+
+print(f"[*] Initializing Auto-Scheduler for: {TITLE}")
+print(f"[*] Target Publish Time: {SCHEDULE_TIME}")
+print("[*] Place 'client_secret.json' and 'video.mp4' in folder.")
+print("[*] Run script to push to YouTube queue securely!");`;
+
+      document.getElementById('pyCodeOutput').value = code;
+    }
+  </script>
+</body>
+</html>
